@@ -47,6 +47,8 @@
 - Fix:
 - How I verified it:
 
+Bug #3 not reproducible in the current branch, verified in browser after editing a flow. Unsaved changes and Discard behaved as expected.”
+
 ### Other things I noticed
 
 <!-- Problems you found that weren't reported. Which ones you fixed, and which ones you left (and why). -->
