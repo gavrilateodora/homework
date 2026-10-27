@@ -139,11 +139,17 @@ export function removeStep(flow, stepId) {
   const outgoing = getConnectionsFrom(flow, stepId).find((c) => c.outcome === "Done");
 
   flow.steps = flow.steps.filter((s) => s.id !== stepId);
-  flow.connections = flow.connections.filter((c) => c.sourceStepId !== stepId && c.targetStepId !== stepId);
+  flow.connections = flow.connections.filter(
+    (c) => c.sourceStepId !== stepId && c.targetStepId !== stepId
+  );
 
   if (outgoing) {
     incoming.forEach((c) => {
-      flow.connections.push({ ...outgoing, sourceStepId: c.sourceStepId });
+      flow.connections.push({
+        sourceStepId: c.sourceStepId,
+        targetStepId: outgoing.targetStepId,
+        outcome: c.outcome,
+      });
     });
   }
 }

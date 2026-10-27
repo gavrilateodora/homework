@@ -72,10 +72,41 @@ describe("removeStep", () => {
     expect(ids(buildTree(flow)[1].branches.True)).toEqual(["t1"]);
   });
 
-  it("reconnects the If to the next step after removing the first branch step", () => {
+  // Bug #1: the reconnected step must keep the branch outcome (True/False),
+  // not inherit "Done" from the removed step's outgoing connection.
+  it("keeps the branch outcome when removing the first step of a branch", () => {
     const flow = branchedFlow();
     removeStep(flow, "t1");
-    expect(flow.connections).toContainEqual({ sourceStepId: "if", targetStepId: "t2", outcome: "Done" });
+
+    expect(flow.connections).toContainEqual({ sourceStepId: "if", targetStepId: "t2", outcome: "True" });
+    expect(flow.connections).not.toContainEqual({ sourceStepId: "if", targetStepId: "t2", outcome: "Done" });
+    expect(ids(buildTree(flow)[1].branches.True)).toEqual(["t2"]);
+  });
+
+  it("does not touch the Done connection of the If when removing the first branch step", () => {
+    const flow = branchedFlow();
+    removeStep(flow, "t1");
+
+    expect(flow.connections).toContainEqual({ sourceStepId: "if", targetStepId: "z", outcome: "Done" });
+    expect(ids(buildTree(flow))).toEqual(["a", "if", "z"]);
+  });
+
+  it("leaves a branch empty when removing its only step", () => {
+    const flow = branchedFlow();
+    removeStep(flow, "f1");
+
+    expect(flow.connections).not.toContainEqual(
+      expect.objectContaining({ sourceStepId: "if", outcome: "False" })
+    );
+    expect(ids(buildTree(flow)[1].branches.False ?? [])).toEqual([]);
+  });
+
+  it("removes a middle step of a branch and keeps the chain", () => {
+    const flow = branchedFlow();
+    insertStep(flow, step("t1b"), { afterStepId: "t1" }); // True: t1 -> t1b -> t2
+    removeStep(flow, "t1b");
+
+    expect(ids(buildTree(flow)[1].branches.True)).toEqual(["t1", "t2"]);
   });
 
   it("only allows removing an If when its branches are empty", () => {

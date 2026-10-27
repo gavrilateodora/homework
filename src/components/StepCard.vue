@@ -1,5 +1,9 @@
 <template>
-  <article class="step-card" :class="{ selected: editor.selectedStepId === step.id }" @click="editor.selectStep(step.id)">
+  <article
+    class="step-card"
+    :class="{ selected: editor.selectedStepId === step.id }"
+    @click="editor.selectStep(step.id)"
+  >
     <span class="icon">
       <catnip-icon .name="getStepIcon(step.type)" size="20"></catnip-icon>
     </span>
@@ -25,7 +29,7 @@ import { useEditorStore } from "@/store/editor.js";
 import { getStepIcon, getStepTypeLabel } from "@/logic/stepTypes.js";
 
 defineProps({
-  step: { type: Object, required: true }
+  step: { type: Object, required: true },
 });
 
 const editor = useEditorStore();
@@ -43,7 +47,9 @@ const editor = useEditorStore();
   border: 1px solid var(--catnip-color-border-neutral-subtle);
   border-radius: var(--catnip-radius-m);
   box-shadow: var(--catnip-shadow-elevation-1);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 
   &:hover {
     border-color: var(--catnip-color-border-neutral-strong);
