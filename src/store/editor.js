@@ -4,6 +4,7 @@ import { buildTree, canRemoveStep, getStep, insertStep, removeStep } from "@/log
 import { STEP_TYPES } from "@/logic/stepTypes.js";
 import { useFlowsStore } from "./flows.js";
 import { useUiStore } from "./ui.js";
+import { findStepsUsing } from "@/logic/references.js";
 
 export const useEditorStore = defineStore("editor", {
   state: () => ({
@@ -92,6 +93,16 @@ export const useEditorStore = defineStore("editor", {
         useUiStore().notify({ intent: "warning", text: "Remove the steps inside this condition first." });
         return;
       }
+      
+      const users = findStepsUsing(this.flow, stepId);
+      if (users.length) {
+        const names = users.map((s) => `- ${s.displayName}`).join("\n");
+        const ok = window.confirm(
+          `Other steps use the output of this step:\n\n${names}\n\nDelete it anyway?`
+        );
+        if (!ok) return;
+      }
+
       removeStep(this.flow, stepId);
       if (this.selectedStepId === stepId) this.selectedStepId = null;
     }

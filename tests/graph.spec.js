@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildTree, canRemoveStep, getAvailableSteps, insertStep, removeStep } from "@/logic/graph.js";
+import { findStepsUsing } from "@/logic/references.js";
 
 const step = (id, type = "SendEmail") => ({ id, type, displayName: id, properties: {} });
 const done = (sourceStepId, targetStepId) => ({ sourceStepId, targetStepId, outcome: "Done" });
@@ -153,5 +154,33 @@ describe("getAvailableSteps", () => {
     };
     expect(availableIds(flow, "x")).toEqual(["if1", "p", "if2"]);
     expect(availableIds(flow, "q")).toEqual(["if1"]);
+  });
+});
+
+describe("findStepsUsing", () => {
+  const A = "11111111-1111-1111-1111-111111111111";
+  const B = "22222222-2222-2222-2222-222222222222";
+  const ref = (id) => `{{ steps.${id}.output.fullName }}`;
+  const withProps = (id, properties) => ({ ...step(id), properties });
+  const usersOf = (steps) => findStepsUsing({ steps, connections: [] }, A).map((s) => s.id);
+
+  it("finds a reference in a string property", () => {
+    expect(usersOf([step(A), withProps(B, { body: `Hi ${ref(A)}` })])).toEqual([B]);
+  });
+
+  it("finds a reference nested in an object", () => {
+    expect(usersOf([step(A), withProps(B, { body: { user: { name: ref(A) } } })])).toEqual([B]);
+  });
+
+  it("finds a reference inside an array of objects", () => {
+    expect(usersOf([step(A), withProps(B, { fields: [{ key: "x", label: ref(A) }] })])).toEqual([B]);
+  });
+
+  it("finds a reference used as an object key", () => {
+    expect(usersOf([step(A), withProps(B, { body: { [ref(A)]: 1 } })])).toEqual([B]);
+  });
+
+  it("ignores steps that do not use it", () => {
+    expect(usersOf([step(A), withProps(B, { body: "hello" })])).toEqual([]);
   });
 });

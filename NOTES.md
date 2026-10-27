@@ -77,6 +77,18 @@ I checked it in the browser and it worked as expected.
 
 <!-- How you find references, and why you did it that way. -->
 
+Before deleting a step, I check if any other step uses its output. I go through
+the 'properties' of every other step, including arrays, nested objects and
+object keys, so things like the webhook body are covered. For finding the
+references I reused 'parseReferences', so the format is defined in one place.
+If something uses it, the user sees a confirm dialog with the names of those
+steps. They can still delete anyway. The check is in 'deleteStep' in the
+store and that's the only place that calls 'removeStep', so there is no way
+around it.
+I wrote tests for a string, a nested object, an array, an object key and a
+step nobody uses. In the browser I deleted ID verification in KYC onboarding
+and the dialog listed the steps that use it.
+
 ## Decisions and assumptions
 
 <!-- Anything that was unclear and how you decided. -->
