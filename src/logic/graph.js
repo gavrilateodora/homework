@@ -153,3 +153,20 @@ export function removeStep(flow, stepId) {
     });
   }
 }
+
+export function getAvailableSteps(tree, targetId) {
+  function walk(nodes, inherited) {
+    const available = [...inherited];
+    for (const node of nodes) {
+      if (node.step.id === targetId) return available;
+      for (const branch of Object.values(node.branches ?? {})) {
+        if (!branch) continue;
+        const found = walk(branch, [...available, node.step]);
+        if (found) return found;
+      }
+      available.push(node.step);
+    }
+    return null;
+  }
+  return walk(tree, []) ?? [];
+}

@@ -59,6 +59,20 @@ Bug #3 not reproducible in the current branch, verified in browser after editing
 
 <!-- Which outputs you offer, and why. Edge cases you thought about. -->
 
+The picker only shows outputs that are guaranteed to exist when the step runs.
+That means the earlier steps in the same sequence. If the step is inside a
+branch, it also includes the steps before the If.
+I leave out the other branch, because only one branch runs. I also leave out
+the steps inside branches for anything after the If, because we don't know
+which branch ran.
+The logic is in 'getAvailableSteps' in graph.js. It walks the tree from
+'buildTree'. I wrote tests for a step in a branch, the other branch, a step
+after the If, the first step and nested Ifs.
+Form outputs come from 'properties.fields', so they change when the user edits
+the fields. I skip fields with an empty key, because they would give a broken
+reference.
+I checked it in the browser and it worked as expected.
+
 ### B. Safe delete
 
 <!-- How you find references, and why you did it that way. -->

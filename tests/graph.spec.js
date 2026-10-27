@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTree, canRemoveStep, insertStep, removeStep } from "@/logic/graph.js";
+import { buildTree, canRemoveStep, getAvailableSteps, insertStep, removeStep } from "@/logic/graph.js";
 
 const step = (id, type = "SendEmail") => ({ id, type, displayName: id, properties: {} });
 const done = (sourceStepId, targetStepId) => ({ sourceStepId, targetStepId, outcome: "Done" });
@@ -23,6 +23,7 @@ function branchedFlow() {
 }
 
 const ids = (nodes) => nodes.map((n) => n.step.id);
+const availableIds = (flow, id) => getAvailableSteps(buildTree(flow), id).map((s) => s.id);
 
 describe("buildTree", () => {
   it("builds the main sequence and the branches", () => {
@@ -116,5 +117,41 @@ describe("removeStep", () => {
     removeStep(flow, "t2");
     removeStep(flow, "t1");
     expect(canRemoveStep(flow, "if")).toBe(true);
+  });
+});
+
+describe("getAvailableSteps", () => {
+  it("gives a step in a branch the earlier steps of that branch and the steps before the If", () => {
+    expect(availableIds(branchedFlow(), "t2")).toEqual(["a", "if", "t1"]);
+  });
+
+  it("does not leak steps from the other branch", () => {
+    expect(availableIds(branchedFlow(), "f1")).toEqual(["a", "if"]);
+  });
+
+  it("does not expose steps inside branches to a step after the If", () => {
+    expect(availableIds(branchedFlow(), "z")).toEqual(["a", "if"]);
+  });
+
+  it("gives the first step of a flow nothing", () => {
+    expect(availableIds(branchedFlow(), "a")).toEqual([]);
+  });
+
+  it("returns an empty list for an unknown step", () => {
+    expect(availableIds(branchedFlow(), "does-not-exist")).toEqual([]);
+  });
+
+  it("handles nested Ifs", () => {
+    const flow = {
+      steps: [step("if1", "If"), step("p"), step("if2", "If"), step("x"), step("q")],
+      connections: [
+        { sourceStepId: "if1", targetStepId: "p", outcome: "True" },
+        done("p", "if2"),
+        { sourceStepId: "if2", targetStepId: "x", outcome: "True" },
+        { sourceStepId: "if1", targetStepId: "q", outcome: "False" }
+      ]
+    };
+    expect(availableIds(flow, "x")).toEqual(["if1", "p", "if2"]);
+    expect(availableIds(flow, "q")).toEqual(["if1"]);
   });
 });
