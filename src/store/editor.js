@@ -31,13 +31,17 @@ export const useEditorStore = defineStore("editor", {
       this.loading = true;
       try {
         const flow = await api.getFlow(flowId);
+        if (this.activeFlowId !== flowId) return;
+
         this.flow = flow;
-        this.original = flow;
-        api.subscribe(flowId, (event) => this.handleRealtimeEvent(event));
+        this.original = JSON.parse(JSON.stringify(flow));
+        this.unsubscribe?.();
+        this.unsubscribe = api.subscribe(flowId, (event) => this.handleRealtimeEvent(event));
       } catch (error) {
+        if (this.activeFlowId !== flowId) return;
         useUiStore().notify({ intent: "danger", text: `Could not load flow: ${error.message}` });
       } finally {
-        this.loading = false;
+        if (this.activeFlowId === flowId) this.loading = false;
       }
     },
 

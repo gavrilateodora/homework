@@ -27,9 +27,19 @@
 
 ### #2 Switching flows quickly
 
-- Root cause:
-- Fix:
-- How I verified it:
+- Root cause: 'openFlow' sets 'activeFlowId' right away, then waits for
+  'api.getFlow'. It never checked afterwards if that flow was still the
+  selected one. The fake backend answers in a different time each call, so the
+  response for KYC can arrive after the one for Contract. When that happens,
+  KYC overwrites 'flow' while 'activeFlowId' is still Contract. The list
+  highlights Contract, but the editor shows KYC. Then Save sends the KYC steps
+  under the Contract id, which explains the duplicated KYC flow and the lost
+  contract. So Save was not a separate bug, it just used the wrong state
+- Fix: after the 'await', 'openFlow' compares 'activeFlowId' with the id it was
+  called with. If they differ, it drops the response. I did the same check in
+  the 'catch', so an old request can't show an error and in 'finally', so an
+  old request can't turn off the loading state of the new one
+- How I verified it: I reproduced it in the UI by clicking KYC and then Contract quickly. Before the fix the list and the editor showed different flows. After the fix they always match
 
 ### #3 Unsaved changes / Discard
 
