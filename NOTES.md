@@ -8,12 +8,6 @@
 
 ### #1 Deleting the first step of a branch
 
-- Root cause:
-- Fix:
-- How I verified it:
-
-### #2 Switching flows quickly
-
 - Root cause: when a step is removed, 'removeStep' reconnects the steps around
   it. It copied the removed step's outgoing 'Done' connection and only changed
   the source. So the new connection kept the outcome 'Done', even when the step
@@ -22,7 +16,7 @@
   branch. In a normal chain ('Done' to 'Done') nothing looks wrong, which is
   why it was easy to miss
 - Fix: the new connection now takes its target from the removed step's 'Done'
-  connection and its outcome from the incoming connection.
+  connection and its outcome from the incoming connection
 - How I verified it: I fixed 'removeStep' and checked it in the UI with
   KYC onboarding. Then I ran 'npm test' and one test failed: "reconnects the If
   to the next step...". It expected 'If -> Done -> t2', which is the buggy
@@ -30,6 +24,12 @@
   'If -> True -> t2' and check the result with 'buildTree'. I also added tests
   for removing the only step of a branch, a middle step, and for the If's
   'Done' connection staying the same
+
+### #2 Switching flows quickly
+
+- Root cause:
+- Fix:
+- How I verified it:
 
 ### #3 Unsaved changes / Discard
 
